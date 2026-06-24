@@ -75,8 +75,7 @@ module control_unit (
     or(aluop1,op_R,op_ORI);   
     assign ALUOp = {aluop1, aluop0};
 
-    
-   
+
     wire any_match;
     or (any_match, op_R, op_J, op_ADDI, op_BEQ, op_LW, op_SW,op_LUI,op_ORI);
     and (RegWrite, regwrite_raw, any_match);

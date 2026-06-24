@@ -1,16 +1,14 @@
-//Behavioural  simulation of a main memory taking multiple cycle to check speed of cache
-
 module main_memory (
     input  wire        clk,
     input  wire        ar,
 
-    
+    // Instruction Cache Interface
     input  wire        imem_read_en,
     input  wire [31:0] imem_addr,
     output wire [31:0] imem_data_out,
     output wire        imem_ready,
 
-    
+    // Data Cache Interface
     input  wire        dmem_read_en,
     input  wire        dmem_write_en,
     input  wire [31:0] dmem_addr,
@@ -18,57 +16,29 @@ module main_memory (
     output wire [31:0] dmem_data_out,
     output wire        dmem_ready
 );
-   
-    reg [31:0] memory [0:255]; 
 
-    initial begin
-        $readmemh("p4.dat", memory);
-    end
+    // 1. Instantiate the Instruction BRAM (256 depth = 8-bit word address)
+    // We map the 32-bit byte address down to a word address using [9:2]
+    inst_bram u_inst_mem (
+      .clka(clk),
+      .addra(imem_addr[9:2]),
+      .douta(imem_data_out)
+    );
 
-   
-    reg [2:0] wait_a;
-    reg       ready_a_reg;
+    // 2. Instantiate the Data BRAM (64 depth = 6-bit word address)
+    // We map the 32-bit byte address down to a word address using [7:2]
+    data_bram u_data_mem (
+      .clka(clk),
+      .wea(dmem_write_en),
+      .addra(dmem_addr[7:2]),
+      .dina(dmem_data_in),
+      .douta(dmem_data_out)
+    );
 
-    always @(posedge clk or posedge ar) begin
-        if (ar) begin
-            wait_a <= 0; ready_a_reg <= 0;
-        end else if (imem_read_en) begin
-            if (wait_a == 3) begin
-                ready_a_reg <= 1; wait_a <= 0;
-            end else begin
-                ready_a_reg <= 0; wait_a <= wait_a + 1;
-            end
-        end else begin
-            wait_a <= 0; ready_a_reg <= 0;
-        end
-    end
-
-    wire [29:0] word_addr_a = imem_addr[31:2];
-    assign imem_data_out = ready_a_reg ? memory[word_addr_a] : 32'hz;
-    assign imem_ready    = ready_a_reg;
-
-  
-    reg [2:0] wait_b;
-    reg       ready_b_reg;
-
-    always @(posedge clk or posedge ar) begin
-        if (ar) begin
-            wait_b <= 0; ready_b_reg <= 0;
-        end else if (dmem_read_en || dmem_write_en) begin
-            if (wait_b == 3) begin
-                ready_b_reg <= 1; wait_b <= 0;
-                
-                if (dmem_write_en) memory[dmem_addr[31:2]] <= dmem_data_in; 
-            end else begin
-                ready_b_reg <= 0; wait_b <= wait_b + 1;
-            end
-        end else begin
-            wait_b <= 0; ready_b_reg <= 0;
-        end
-    end
-
-    wire [29:0] word_addr_b = dmem_addr[31:2];
-    assign dmem_data_out = ready_b_reg ? memory[word_addr_b] : 32'hz;
-    assign dmem_ready    = ready_b_reg;
+    // FPGAs are incredibly fast. Since BRAM operates natively in 1 clock cycle,
+    // we can eliminate your old 3-cycle simulation wait-states. 
+    // We simply tell your cache controllers that the backing memory is always ready.
+    assign imem_ready = 1'b1;
+    assign dmem_ready = 1'b1;
 
 endmodule

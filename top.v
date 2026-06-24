@@ -1,7 +1,19 @@
 module mips_pipelined_top (
     input wire CLK,
-    input wire AR
+    input wire AR,
+    
+    output wire [15:0] LED,
+    output wire [6:0] seg_out,     // 7-Segment display
+    output wire [7:0] anode_select
 );
+
+    wire clk_10mhz; 
+
+    clk_wiz_0 u_clk_wiz (
+        .clk_in1(CLK),         
+        .reset(AR),           
+        .clk_out1(clk_10mhz)  
+    );
 
     //IF
     wire [31:0] pc_plus4_f, instr_f;
@@ -71,7 +83,7 @@ module mips_pipelined_top (
 
 
     main_memory slow_ram (
-        .clk(CLK), .ar(AR),
+        .clk(clk_10mhz), .ar(AR),
         
         .imem_read_en(imem_read_en), .imem_addr(imem_addr),
         .imem_data_out(imem_data), .imem_ready(imem_ready),
@@ -83,7 +95,7 @@ module mips_pipelined_top (
 
     
     fetch_stage IF_stage (
-        .clk(CLK), .ar(AR), .pc_en(pc_en),
+        .clk(clk_10mhz), .ar(AR), .pc_en(pc_en),
         .ex_flush(mispredict_flush), .ex_correct_pc(correct_next_pc),
         .jump_d(sgn_jump), .jump_target_d(jump_target_d),
         .ex_update_en(ex_update_en), .ex_pc(pc_current_e), .ex_target(pc_branch_target_e), .ex_taken(ex_branch_taken),
@@ -98,7 +110,7 @@ module mips_pipelined_top (
     );
 
     pipeline_fetch_reg if_id_reg (
-        .CLK(CLK), .AR(AR), .EN(if_id_en), .SR(if_id_flush),
+        .CLK(clk_10mhz), .AR(AR), .EN(if_id_en), .SR(if_id_flush),
         .instr_in(instr_f), .pc_plus4_in(pc_plus4_f),
         
          
@@ -112,7 +124,7 @@ module mips_pipelined_top (
 
     
     decode_stage ID_stage (
-        .clk(CLK), .ar(AR), .instr_d(instr_d), .pc_plus4_d(pc_plus4_d),
+        .clk(clk_10mhz), .ar(AR), .instr_d(instr_d), .pc_plus4_d(pc_plus4_d),
         .reg_write_w(reg_write_w), .write_reg_w(write_reg_w), .write_data_w(result_w),
         .rd1_d(rd1_d), .rd2_d(rd2_d), .imm_ext_d(imm_ext_d),
         .rs_d(), .rt_d(), .rd_d(),
@@ -133,7 +145,7 @@ module mips_pipelined_top (
     assign sgn_jump = jump_d & ~mispredict_flush;
 
     pipeline_dec id_ex_reg (
-        .CLK(CLK), .AR(AR), .EN(pipe_en), .SR(id_ex_flush),
+        .CLK(clk_10mhz), .AR(AR), .EN(pipe_en), .SR(id_ex_flush),
         
         .pc_inc_in(pc_plus4_d), .rd1_d(rd1_d), .rd2_d(rd2_d), .imm_ext_d(imm_ext_d),
         .rs_d(instr_d[25:21]), .rt_d(instr_d[20:16]), .rd_d(instr_d[15:11]), .funct_in(instr_d[5:0]),
@@ -180,7 +192,7 @@ module mips_pipelined_top (
     );
 
     pipeline_ex_mem ex_mem_reg (
-        .CLK(CLK), .AR(AR), .EN(pipe_en), .SR(1'b0),
+        .CLK(clk_10mhz), .AR(AR), .EN(pipe_en), .SR(1'b0),
         .alu_result_in(alu_result_e), .write_data_in(write_data_e), .write_reg_in(write_reg_e),
         .zero_in(zero_e), .reg_write_in(reg_write_e), .mem_to_reg_in(mem_to_reg_e),
         .mem_read_in(mem_read_e), .mem_write_in(mem_write_e), .branch_in(branch_e),
@@ -202,7 +214,7 @@ module mips_pipelined_top (
     assign npu_req_write=mem_write_m && is_npu; 
 
    dcache data_cache (
-        .clk(CLK), .ar(AR),
+        .clk(clk_10mhz), .ar(AR),
         
         
         .cpu_addr(alu_result_m),
@@ -222,7 +234,7 @@ module mips_pipelined_top (
     );
 
     npu_top NPU (
-        .CLK(CLK),
+        .CLK(clk_10mhz),
         .AR(AR),
 
         .mem_addr(alu_result_m),
@@ -235,7 +247,7 @@ module mips_pipelined_top (
     assign read_data_m= (is_npu) ? npu_read_data:dc_read_data;
 
     pipeline_mem_wb mem_wb_reg (
-        .CLK(CLK), .AR(AR), .EN(pipe_en), .SR(1'b0),
+        .CLK(clk_10mhz), .AR(AR), .EN(pipe_en), .SR(1'b0),
         .read_data_in(read_data_m), .alu_result_in(alu_result_m), .write_reg_in(write_reg_m),
         .reg_write_in(reg_write_m), .mem_to_reg_in(mem_to_reg_m),
         .read_data_out(read_data_w), .alu_result_out(alu_result_w), .write_reg_out(write_reg_w),
@@ -245,6 +257,32 @@ module mips_pipelined_top (
         
     mux_2_to_1 #(.WIDTH(32)) wb_mux (
         .In0(alu_result_w), .In1(read_data_w), .Sel(mem_to_reg_w), .Out(result_w)
+    );
+    
+    
+    reg [15:0] led_reg;
+    
+    
+    
+    always @(posedge clk_10mhz or posedge AR) begin
+        if (AR) begin
+            led_reg <= 16'b0;
+        end 
+        
+        else if (mem_write_m && (alu_result_m == 32'h8000_0070)) begin
+            led_reg <= write_data_m[15:0]; 
+        end
+    end
+
+    assign LED = led_reg; 
+    
+    
+    display_controller seven_seg_display (
+        .clk_50MHz(clk_10mhz),      
+        .reset(AR),                 
+        .data_in({16'd0, led_reg}), 
+        .seg_out(seg_out),          
+        .anode_select(anode_select) 
     );
 
 endmodule

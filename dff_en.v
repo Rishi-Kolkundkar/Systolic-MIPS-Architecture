@@ -9,7 +9,7 @@
 //     wire ar_n, s_masked, r_masked;
 //     wire q_int, qbar_int;
 
-//     
+    
 //     not (nD, D);
 //     not (ar_n, AR);
 
@@ -23,18 +23,18 @@
 //    nor  (q_int, s, qbar_int, AR);
 //     nor (qbar_int, r, q_int,AR);
 
-//     
+    
 //     buf  (Q, q_int);
 //     buf  (Qbar,qbar_int);
 // endmodule
 
 
 // module d_flip_flop_en (
-//     input wire AR,   // Asynchronous Reset (active-high)
-//     input wire D,    // Data input
-//     input wire CLK,  // Clock input
-//     input wire EN,   // Enable input
-//     output wire Q    // Output
+//     input wire AR,  
+//     input wire D,   
+//     input wire CLK, 
+//     input wire EN,  
+//     output wire Q   
 // );
 //     wire nck, interq, d_final;
 
@@ -70,7 +70,8 @@
 
 
 
-//Behavioural flip flips as gate level flips took a long time to compile
+// Behavioural flip flips as gate level flips took a long time to compile
+
 module d_flip_flop_en (
     input wire AR,   
     input wire D,    

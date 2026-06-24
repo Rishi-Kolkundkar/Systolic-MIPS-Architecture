@@ -50,7 +50,8 @@ module hazard_detection_unit (
         
         if (mem_read_e && (rt_e != 5'd0) && ((rt_e == rs_d) || (rt_e == rt_d))) begin
             stall = 1'b1;
-        end else begin
+        end 
+        else begin
             stall = 1'b0;
         end
     end
