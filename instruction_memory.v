@@ -35,9 +35,7 @@ module main_memory (
       .douta(dmem_data_out)
     );
 
-    // FPGAs are incredibly fast. Since BRAM operates natively in 1 clock cycle,
-    // we can eliminate your old 3-cycle simulation wait-states. 
-    // We simply tell your cache controllers that the backing memory is always ready.
+    
     assign imem_ready = 1'b1;
     assign dmem_ready = 1'b1;
 
