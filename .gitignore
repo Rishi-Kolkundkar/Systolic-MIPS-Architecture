@@ -1,0 +1,16 @@
+# Vivado Ignore List
+*.jou
+*.log
+*.str
+*.zip
+*.dcp
+.Xil/
+*_webtalk.html
+*_webtalk.xml
+webtalk_*.backup.jou
+webtalk_*.backup.log
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
