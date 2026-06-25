@@ -4,6 +4,8 @@ This repository contains a gate-level structural Verilog implementation of a Sys
 
 The primary focus of this project is the integration of a custom hardware accelerator capable of parallel matrix multiplication via a 2D Systolic Array, completely offloading intensive compute tasks from the main CPU pipeline.
 
+Vivado synthesizable code is on the branch vivado-implementation.
+
 ## System Architecture
 
 ### 1. Neural Processing Unit (NPU) & Systolic Array
