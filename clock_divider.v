@@ -1,7 +1,7 @@
 module clock_divider (
     input  wire clk_50MHz,    // fast in CLK
     input  wire reset,       
-    output reg  clk_1kHz      // clow out CLK
+    output reg  clk_1kHz      // slow out CLK
 );
 
     // 16-bit counter
