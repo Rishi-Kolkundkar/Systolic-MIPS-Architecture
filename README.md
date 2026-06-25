@@ -1,4 +1,4 @@
-# MIPS SoC with Integrated Systolic Array NPU
+# MIPS SoC with Integrated Systolic Array NPU (FPGA Synthesizable)
 
 This repository contains a gate-level structural Verilog implementation of a System-on-Chip (SoC) featuring a 5-stage pipelined MIPS32 core, a memory-mapped Neural Processing Unit (NPU) accelerator with a simple branch predictor and cache. 
 
